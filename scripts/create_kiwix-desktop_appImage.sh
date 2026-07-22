@@ -5,6 +5,7 @@ set -e
 INSTALLDIR=${1:-$PWD/BUILD_native_dyn/INSTALL}
 SOURCEDIR=${2:-$PWD/SOURCE/kiwix-desktop}
 APPDIR=${3:-$PWD/AppDir}
+QTDIR=${4:-$PWD/Qt/6.8.3/gcc_64}
 
 SYSTEMLIBDIR=lib/x86_64-linux-gnu
 if [ ! -e "$INSTALLDIR/lib" ] ; then
@@ -35,6 +36,9 @@ mkdir -p $APPDIR/usr/bin/ && unzip aria2-1.37.0-x86_64-linux-musl_libressl_stati
 
 # Copy the CA trustore from the hosting system
 mkdir -p $APPDIR/etc/ssl/certs/ && cp /etc/ssl/certs/ca-certificates.crt $APPDIR/etc/ssl/certs/
+
+# Copy a Qt6 resource missed by linuxdeploy-plugin-qt
+cp "$QTDIR"/resources/v8_context_snapshot.bin "$APPDIR"/usr/resources/
 
 # Fix the RPATH of QtWebEngineProcess [TODO] Fill a issue ?
 patchelf --set-rpath '$ORIGIN/../lib' $APPDIR/usr/libexec/QtWebEngineProcess

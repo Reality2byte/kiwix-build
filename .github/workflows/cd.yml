@@ -132,8 +132,6 @@ jobs:
           - x86-64_musl_mixed
         image_variant: ['jammy']
         include:
-          - config: native_dyn
-            image_variant: resolute
           - config: native_mixed
             image_variant: x86-64_manylinux
     env:
@@ -141,7 +139,7 @@ jobs:
       KIWIX_FILE_UPLOAD_SSH_KEY_PATH: /tmp/kiwix_file_upload_key
     runs-on: ubuntu-22.04
     container:
-      image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:2026-04-25"
+      image: "ghcr.io/kiwix/kiwix-build_ci_${{matrix.image_variant}}:2026-07-22"
       options: "--device /dev/fuse --privileged"
     steps:
     - name: Checkout code
@@ -164,6 +162,19 @@ jobs:
       run: |
         echo "${{secrets.KIWIXBUILD_FILE_UPLOAD_KEY}}" > $KIWIX_FILE_UPLOAD_SSH_KEY_PATH
         chmod 600 $KIWIX_FILE_UPLOAD_SSH_KEY_PATH
+    - name: Install QT
+      if: ${{ matrix.config == 'native_dyn' }}
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: 6.8.3
+        host: "linux"
+        target: "desktop"
+        dir: /home/runner
+        modules: "qtwebengine qtwebchannel qtpositioning qtserialport"
+        install-deps: false
+        setup-python: false
+      env:
+        AQT_CONFIG: ${{ github.workspace }}/.github/configs/aqt.ini
     - name: Ensure base deps
       shell: bash
       run: |
@@ -175,6 +186,7 @@ jobs:
       shell: bash
       run: |
         cd $HOME
+        PATH=/home/runner/Qt/6.8.3/gcc_64/bin:$PATH
         kiwix-build/.github/scripts/build_release_nightly.py
       env:
         COMPILE_CONFIG: ${{matrix.config}}
